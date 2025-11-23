@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -45,6 +45,7 @@ pub struct Task {
     pub completed: bool,
     pub created_at: DateTime<Utc>,
     pub completed_at: Option<DateTime<Utc>>,
+    pub due_date: Option<NaiveDate>,
 }
 
 impl Task {
@@ -54,6 +55,7 @@ impl Task {
         description: Option<String>,
         priority: Priority,
         tags: Vec<String>,
+        due_date: Option<NaiveDate>,
     ) -> Self {
         Task {
             id,
@@ -64,6 +66,7 @@ impl Task {
             completed: false,
             created_at: Utc::now(),
             completed_at: None,
+            due_date,
         }
     }
 
@@ -94,6 +97,10 @@ impl Task {
             return !self.completed;
         }
 
+        if filter == "overdue" {
+            return self.is_overdue();
+        }
+
         true
     }
 
@@ -111,5 +118,24 @@ impl Task {
 
     pub fn update_tags(&mut self, tags: Vec<String>) {
         self.tags = tags;
+    }
+
+    pub fn update_due_date(&mut self, due_date: Option<NaiveDate>) {
+        self.due_date = due_date;
+    }
+
+    pub fn is_overdue(&self) -> bool {
+        if self.completed {
+            return false;
+        }
+        if let Some(due) = self.due_date {
+            let today = Utc::now().date_naive();
+            return due < today;
+        }
+        false
+    }
+
+    pub fn parse_due_date(date_str: &str) -> Option<NaiveDate> {
+        NaiveDate::parse_from_str(date_str, "%Y-%m-%d").ok()
     }
 }

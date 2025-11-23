@@ -237,17 +237,6 @@ pub fn show_stats() -> Result<()> {
     println!();
 
     Ok(())
-    println!("{}", "Task Statistics".bold().cyan());
-    println!("{}", "═".repeat(50).bright_black());
-    println!("\n{}", "Overview:".bold());
-    println!("  Total tasks:      {}", total.to_string().bold());
-    println!("  Completed:        {} ({}%)", completed.to_string().green(), format!("{:.1}", completion_rate).green());
-    println!("  Incomplete:       {}", incomplete.to_string().yellow());
-    if overdue > 0 {
-        println!("  Overdue:          {}", overdue.to_string().red().bold());
-    }
-    
-    println!("\n{}", "By Priority:".bold());
     println!("  High:             {}", high_priority.to_string().red());
     println!("  Medium:           {}", medium_priority.to_string().yellow());
     println!("  Low:              {}", low_priority.to_string().cyan());

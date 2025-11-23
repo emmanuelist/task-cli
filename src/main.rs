@@ -31,6 +31,10 @@ enum Commands {
         /// Tags (comma-separated or multiple --tags)
         #[arg(short, long, value_delimiter = ',')]
         tags: Vec<String>,
+
+        /// Due date (YYYY-MM-DD format)
+        #[arg(short = 'u', long)]
+        due_date: Option<String>,
     },
 
     /// List tasks
@@ -39,9 +43,13 @@ enum Commands {
         #[arg(short, long)]
         all: bool,
 
-        /// Filter tasks (e.g., priority:high, tag:rust, completed, incomplete)
+        /// Filter tasks (e.g., priority:high, tag:rust, completed, incomplete, overdue)
         #[arg(short, long)]
         filter: Option<String>,
+
+        /// Sort tasks by (date, priority, due-date)
+        #[arg(short = 's', long)]
+        sort_by: Option<String>,
     },
 
     /// Mark a task as complete
@@ -76,7 +84,20 @@ enum Commands {
         /// New tags (comma-separated)
         #[arg(long, value_delimiter = ',')]
         tags: Option<Vec<String>>,
+
+        /// New due date (YYYY-MM-DD format)
+        #[arg(short = 'u', long)]
+        due_date: Option<String>,
     },
+
+    /// Search tasks by keyword
+    Search {
+        /// Search query
+        query: String,
+    },
+
+    /// Show task statistics
+    Stats,
 }
 
 fn main() {
@@ -88,9 +109,10 @@ fn main() {
             description,
             priority,
             tags,
-        } => commands::add_task(title, description, priority, tags),
+            due_date,
+        } => commands::add_task(title, description, priority, tags, due_date),
 
-        Commands::List { all, filter } => commands::list_tasks(all, filter),
+        Commands::List { all, filter, sort_by } => commands::list_tasks(all, filter, sort_by),
 
         Commands::Complete { id } => commands::complete_task(id),
 
@@ -102,7 +124,12 @@ fn main() {
             description,
             priority,
             tags,
-        } => commands::edit_task(id, title, description, priority, tags),
+            due_date,
+        } => commands::edit_task(id, title, description, priority, tags, due_date),
+
+        Commands::Search { query } => commands::search_tasks(query),
+
+        Commands::Stats => commands::show_stats(),
     };
 
     if let Err(e) = result {

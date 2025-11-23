@@ -1,6 +1,6 @@
 use crate::storage::Storage;
 use crate::task::{Priority, Task};
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 
 pub fn add_task(
     title: String,

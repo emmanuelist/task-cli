@@ -237,11 +237,4 @@ pub fn show_stats() -> Result<()> {
     println!();
 
     Ok(())
-    println!("  High:             {}", high_priority.to_string().red());
-    println!("  Medium:           {}", medium_priority.to_string().yellow());
-    println!("  Low:              {}", low_priority.to_string().cyan());
-    println!("{}", "═".repeat(50).bright_black());
-    println!();
-
-    Ok(())
 }

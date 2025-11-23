@@ -7,6 +7,7 @@ pub fn add_task(
     description: Option<String>,
     priority: Option<String>,
     tags: Vec<String>,
+    due_date: Option<String>,
 ) -> Result<()> {
     let storage = Storage::new()?;
     let mut tasks = storage.load_tasks()?;
@@ -18,8 +19,15 @@ pub fn add_task(
         Priority::Medium
     };
 
+    let parsed_due_date = if let Some(date_str) = due_date {
+        Some(Task::parse_due_date(&date_str)
+            .ok_or_else(|| anyhow!("Invalid date format. Use YYYY-MM-DD"))?)
+    } else {
+        None
+    };
+
     let id = storage.get_next_id()?;
-    let task = Task::new(id, title, description, priority, tags);
+    let task = Task::new(id, title, description, priority, tags, parsed_due_date);
 
     tasks.push(task.clone());
     storage.save_tasks(&tasks)?;
@@ -28,7 +36,7 @@ pub fn add_task(
     Ok(())
 }
 
-pub fn list_tasks(all: bool, filter: Option<String>) -> Result<()> {
+pub fn list_tasks(all: bool, filter: Option<String>, sort_by: Option<String>) -> Result<()> {
     let storage = Storage::new()?;
     let mut tasks = storage.load_tasks()?;
 
@@ -41,12 +49,31 @@ pub fn list_tasks(all: bool, filter: Option<String>) -> Result<()> {
         tasks.retain(|t| t.matches_filter(&filter_str));
     }
 
-    // Sort by priority (high to low) then by creation date
-    tasks.sort_by(|a, b| {
-        b.priority.priority_value()
-            .cmp(&a.priority.priority_value())
-            .then(a.created_at.cmp(&b.created_at))
-    });
+    // Sort tasks
+    let sort_option = sort_by.as_deref().unwrap_or("priority");
+    match sort_option {
+        "date" => {
+            tasks.sort_by(|a, b| a.created_at.cmp(&b.created_at));
+        }
+        "priority" => {
+            tasks.sort_by(|a, b| {
+                b.priority.priority_value()
+                    .cmp(&a.priority.priority_value())
+                    .then(a.created_at.cmp(&b.created_at))
+            });
+        }
+        "due-date" => {
+            tasks.sort_by(|a, b| {
+                match (a.due_date, b.due_date) {
+                    (Some(d1), Some(d2)) => d1.cmp(&d2),
+                    (Some(_), None) => std::cmp::Ordering::Less,
+                    (None, Some(_)) => std::cmp::Ordering::Greater,
+                    (None, None) => a.created_at.cmp(&b.created_at),
+                }
+            });
+        }
+        _ => return Err(anyhow!("Invalid sort option. Use: date, priority, or due-date")),
+    }
 
     if tasks.is_empty() {
         println!("No tasks found.");

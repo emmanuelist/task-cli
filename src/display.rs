@@ -48,6 +48,15 @@ pub fn print_task(task: &Task) {
     let created = task.created_at.format("%Y-%m-%d %H:%M");
     println!("   {}: {}", "Created".bright_black(), created.to_string().bright_black());
 
+    if let Some(due) = task.due_date {
+        let due_str = due.format("%Y-%m-%d").to_string();
+        if task.is_overdue() {
+            println!("   {}: {} {}", "Due".bright_black(), due_str.red().bold(), "⚠ OVERDUE".red().bold());
+        } else {
+            println!("   {}: {}", "Due".bright_black(), due_str.cyan());
+        }
+    }
+
     if let Some(completed_at) = task.completed_at {
         let completed = completed_at.format("%Y-%m-%d %H:%M");
         println!("   {}: {}", "Completed".bright_black(), completed.to_string().green());
